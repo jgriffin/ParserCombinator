@@ -46,6 +46,7 @@ infix operator <^>: MapApplyGroup
 infix operator <*>: MapApplyGroup
 infix operator <*: MapApplyGroup
 infix operator *>: MapApplyGroup
+infix operator <|>: ApplyGroup
 
 // MARK: - >>- flat map
 
@@ -77,20 +78,46 @@ public func <^> <A, B>(lhs: @escaping (A) -> B?,
 
 // MARK: - <*> map parser
 
+/**
+ Apply a parser returning a function to another parser.
+ - If the first parser fails, its error will be returned.
+ - If it succeeds, the resulting function will be applied to the 2nd parser.
+ */
 public func <*> <A, B>(lhs: Parser<(A) -> B>,
                        rhs: Parser<A>) -> Parser<B>
 {
     lhs.followed(by: rhs).map { f, x in f(x) }
 }
 
+/**
+ Apply both parsers, but only return the output from the first one.
+ - If the first parser fails, its error will be returned.
+ - If the 2nd parser fails, its error will be returned. */
 public func <* <A, B>(p1: Parser<A>, p2: Parser<B>) -> Parser<A> {
     { x in { _ in x } } <^> p1 <*> p2
 }
 
+/**
+ Apply both parsers, but only return the output from the 2nd one.
+ - If the first parser fails, its error will be returned.
+ - If the 2nd parser fails, its error will be returned. */
 public func *> <A, B>(p1: Parser<A>, p2: Parser<B>) -> Parser<B> {
     { _ in { x in x } } <^> p1 <*> p2
 }
 
+
+/**
+ Apply one of 2 parsers.
+ - If the first parser succeeds, return its results.
+ - Else if the 2nd parser succeeds, return its results.
+ - If they both fail, return the failure from the parser that got the furthest.
+ Has infinite lookahead. The 2nd parser starts from the same position in the input as the first one.
+ */
+public func <|> <A> (l: Parser<A>, r: Parser<A>) -> Parser<A> {
+    .init { input in
+        l.parse(input) ?? r.parse(input)
+    }
+}
 // MARK: - tupple
 
 public func tuple<A, B>(_ a: A) -> (B) -> (A, B) {
