@@ -24,6 +24,10 @@ public extension Parsers {
 
     static let digit = Self.passing { CharacterSet.decimalDigits.contains($0.unicodeScalar) }
     static let integer = digit.oneOrMore().map { characters in Int(String(characters)) }
+    
+    static let alphanum = Self.passing {
+        CharacterSet.alphanumerics.contains($0.unicodeScalar)
+    }
 }
 
 public extension Parsers {
