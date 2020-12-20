@@ -78,11 +78,7 @@ public func <^> <A, B>(lhs: @escaping (A) -> B?,
 
 // MARK: - <*> map parser
 
-/**
- Apply a parser returning a function to another parser.
- - If the first parser fails, its error will be returned.
- - If it succeeds, the resulting function will be applied to the 2nd parser.
- */
+// apply result of first parser to the second
 public func <*> <A, B>(lhs: Parser<(A) -> B>,
                        rhs: Parser<A>) -> Parser<B>
 {
@@ -106,13 +102,7 @@ public func *> <A, B>(p1: Parser<A>, p2: Parser<B>) -> Parser<B> {
 }
 
 
-/**
- Apply one of 2 parsers.
- - If the first parser succeeds, return its results.
- - Else if the 2nd parser succeeds, return its results.
- - If they both fail, return the failure from the parser that got the furthest.
- Has infinite lookahead. The 2nd parser starts from the same position in the input as the first one.
- */
+// return first parser that succeeds
 public func <|> <A> (l: Parser<A>, r: Parser<A>) -> Parser<A> {
     .init { input in
         l.parse(input) ?? r.parse(input)

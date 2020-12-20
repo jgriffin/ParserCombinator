@@ -7,38 +7,67 @@
 
 import Foundation
 
-public enum Parsers {}
-
 public extension Parsers {
-    static func passing(_ check: @escaping (Character) -> Bool) -> Parser<Character> {
-        .init { input in
-            guard let ch = input.first, check(ch) else {
+    static let nextChar = Parser<Character> { string in
+        guard !string.isEmpty else { return nil }
+        return string.removeFirst()
+    }
+
+    static func character(if predicate: @escaping (Character) -> Bool) -> Parser<Character> {
+        Parser<Character> { string in
+            let original = string
+            guard let ch = nextChar.parse(&string),
+                  predicate(ch)
+            else {
+                string = original
                 return nil
             }
-            return (ch, input.dropFirst())
+            return ch
         }
     }
 
-    static let letter = Self.passing { CharacterSet.letters.contains($0.unicodeScalar) }
-    static let word = letter.oneOrMore().map { characters in String(characters) }
+    static func character(_ ch: Character) -> Parser<Character> {
+        character { $0 == ch }
+    }
 
-    static let digit = Self.passing { CharacterSet.decimalDigits.contains($0.unicodeScalar) }
-    static let integer = digit.oneOrMore().map { characters in Int(String(characters)) }
-    
-    static let alphanum = Self.passing {
-        CharacterSet.alphanumerics.contains($0.unicodeScalar)
+    static func character(in characterSet: CharacterSet) -> Parser<Character> {
+        character { ch in characterSet.contains(ch.unicodeScalar) }
+    }
+
+    static func prefix(charactersIn characterSet: CharacterSet) -> Parser<[Character]> {
+        prefix(while: { ch in characterSet.contains(ch.unicodeScalar) })
+            .map(Array.init)
+    }
+
+    static func prefix(while predicate: @escaping (Character) -> Bool) -> Parser<Substring> {
+        Parser<Substring> { string in
+            let prefix = string.prefix(while: predicate)
+            string.removeFirst(prefix.count)
+            return prefix
+        }
+    }
+
+    static func literal(_ literal: String) -> Parser<Void> {
+        Parser<Void> { string in
+            guard string.hasPrefix(literal) else { return nil }
+            string.removeFirst(literal.count)
+            return ()
+        }
     }
 }
 
 public extension Parsers {
-    static func character(_ ch: Character) -> Parser<Character> {
-        passing { $0 == ch }
-    }
+    static let letter = character(in: .letters)
+    static let letters = prefix(charactersIn: .letters).string
 
-    static func string(_ prefix: String) -> Parser<String> {
-        .init { input in
-            guard input.hasPrefix(prefix) else { return nil }
-            return (prefix, input.dropFirst(prefix.count))
-        }
-    }
+    static let digit = character(in: .decimalDigits)
+    static let integer = prefix(charactersIn: .decimalDigits).int
+
+    static let alphanum = character(in: .alphanumerics)
+    static let alphanums = prefix(charactersIn: .alphanumerics).string
+
+    static let space = character(" ")
+    static let spaces = prefix { $0 == " " }.string
+
+    static let newline = character("\n")
 }
