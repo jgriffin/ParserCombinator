@@ -52,7 +52,9 @@ public extension Parser where OUTPUT == Character {
     static let digit = character(in: .decimalDigits)
     static let alphanum = character(in: .alphanumerics)
     static let space = character(" ")
+    static let whitespace = character(in: .whitespaces)
     static let newline = character("\n")
+    static let whitespaceAndNewline = character(in: .whitespacesAndNewlines)
 }
 
 public extension Parser where OUTPUT == Substring {
@@ -70,12 +72,19 @@ public extension Parser where OUTPUT == Substring {
         })
     }
 
-    static var letters: Self { prefix(charactersIn: .letters) }
-    static var digits: Self { prefix(charactersIn: .decimalDigits) }
-    static var alphanums: Self { prefix(charactersIn: .alphanumerics) }
-    static var spaces: Self { prefix { $0 == " " } }
+    static var letters: Self { prefix(charactersIn: .letters).atLeastOne() }
+    static var digits: Self { prefix(charactersIn: .decimalDigits).atLeastOne() }
+    static var alphanums: Self { prefix(charactersIn: .alphanumerics).atLeastOne() }
+    static var spaces: Self { prefix { $0 == " " }.atLeastOne() }
+    static var whitespaces: Self { prefix(charactersIn: .whitespaces).atLeastOne() }
 }
 
 public extension Parser where OUTPUT == Int {
     static var integer: Self { Parser<Substring>.digits.asInt }
+}
+
+public extension Parser where OUTPUT: Collection {
+    func atLeastOne() -> Self {
+        filter { a in !a.isEmpty }
+    }
 }

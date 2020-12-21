@@ -45,18 +45,21 @@ public extension Parser {
 
             var matches: [OUTPUT] = []
 
+            var backtrack = string
+
             while matches.count < maxCount,
                   let match = parse(&string)
             {
                 matches.append(match)
 
-                let backtrack = string
-                guard let _ = s.parse(&string)
-                else {
-                    string = backtrack
+                backtrack = string
+
+                guard let _ = s.parse(&string) else {
                     break
                 }
             }
+
+            string = backtrack
 
             guard minCount <= matches.count
             else {
