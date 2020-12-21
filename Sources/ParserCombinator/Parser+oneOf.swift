@@ -7,12 +7,12 @@
 
 import Foundation
 
-public extension Parser {
-    // MARK: oneOf
+// MARK: oneOf
 
+public extension Parser {
     // oneOf - takes the first ps that matches
-    static func oneOf<A>(_ ps: [Parser<A>]) -> Parser<A> {
-        Parser<A> { string in
+    static func oneOf(_ ps: Parser<OUTPUT>...) -> Self {
+        Parser<OUTPUT> { string in
             for p in ps {
                 if let match = p.parse(&string) {
                     return match

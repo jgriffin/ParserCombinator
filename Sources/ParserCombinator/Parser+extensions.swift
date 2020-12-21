@@ -19,7 +19,7 @@ public extension Parser where OUTPUT == Character {
         return string.removeFirst()
     }
 
-    static func character(if predicate: @escaping (Character) -> Bool) -> Parser<Character> {
+    static func character(if predicate: @escaping (Character) -> Bool) -> Self {
         Parser<Character> { string in
             let original = string
             guard let ch = nextChar.parse(&string),
@@ -38,6 +38,14 @@ public extension Parser where OUTPUT == Character {
 
     static func character(in characterSet: CharacterSet) -> Self {
         character { ch in characterSet.contains(ch.unicodeScalar) }
+    }
+
+    static func character(in characters: [Character]) -> Self {
+        character { ch in characters.contains(ch) }
+    }
+
+    static func character(in characters: String) -> Self {
+        character(in: Array(characters))
     }
 
     static let letter = character(in: .letters)
@@ -62,31 +70,12 @@ public extension Parser where OUTPUT == Substring {
         })
     }
 
-    var string: Parser<String> {
-        compactMap { String($0) }
-    }
-
-    var int: Parser<Int> {
-        string.compactMap { Int($0) }
-    }
-}
-
-public extension Parser where OUTPUT == Void {
-    static func literal(_ literal: String) -> Parser<Void> {
-        Parser<Void> { string in
-            guard string.hasPrefix(literal) else { return nil }
-            string.removeFirst(literal.count)
-            return ()
-        }
-    }
-}
-
-public extension Parser where OUTPUT == String {
-    static let letters = Parser<Substring>.prefix(charactersIn: .letters).string
-    static let alphanums = Parser<Substring>.prefix(charactersIn: .alphanumerics).string
-    static let spaces = Parser<Substring>.prefix { $0 == " " }.string
+    static var letters: Self { prefix(charactersIn: .letters) }
+    static var digits: Self { prefix(charactersIn: .decimalDigits) }
+    static var alphanums: Self { prefix(charactersIn: .alphanumerics) }
+    static var spaces: Self { prefix { $0 == " " } }
 }
 
 public extension Parser where OUTPUT == Int {
-    static let integer = Parser<Substring>.prefix(charactersIn: .decimalDigits).int
+    static var integer: Self { Parser<Substring>.digits.asInt }
 }

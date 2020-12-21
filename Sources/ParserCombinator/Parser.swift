@@ -29,7 +29,15 @@ public extension Parser {
 
     // convenience method to run the parser on a string input (without modifiying it)
     // returning just the result
-    func match(_ string: String) -> OUTPUT? {
-        run(string).match
+    func match(_ string: String, completely: Bool = true) -> OUTPUT? {
+        let result = run(string)
+        guard !completely || result.rest.isEmpty else { return nil }
+        return result.match
+    }
+
+    // convenience method to run the parser on a string input (without modifiying it)
+    // and know whether it matches
+    func matches(_ string: String, completely: Bool = true) -> Bool {
+        match(string, completely: completely) != nil
     }
 }
