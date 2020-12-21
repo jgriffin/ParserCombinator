@@ -7,30 +7,59 @@
 
 import Foundation
 
-public extension Parsers {
-    static func take<A, S>(minCount: Int = 0,
-                           count maxCount: Int = Int.max,
-                           _ p: Parser<A>,
-                           separatedBy s: Parser<S>) -> Parser<[A]>
+public extension Parser {
+    // MARK: takeMany
+
+    func takeMany(minCount: Int = 0,
+                  maxCount: Int = Int.max)
+        -> Parser<[OUTPUT]>
     {
-        Parser<[A]> { string in
+        Parser<[OUTPUT]> { string in
             let original = string
 
-            var matches: [A] = []
+            var matches: [OUTPUT] = []
 
             while matches.count < maxCount,
-                  let match = p.parse(&string)
+                  let match = parse(&string)
+            {
+                matches.append(match)
+            }
+
+            guard minCount <= matches.count
+            else {
+                string = original
+                return nil
+            }
+
+            return matches
+        }
+    }
+
+    func takeMany<S>(minCount: Int = 0,
+                     maxCount: Int = Int.max,
+                     separatedBy s: Parser<S>)
+        -> Parser<[OUTPUT]>
+    {
+        Parser<[OUTPUT]> { string in
+            let original = string
+
+            var matches: [OUTPUT] = []
+
+            while matches.count < maxCount,
+                  let match = parse(&string)
             {
                 matches.append(match)
 
                 let backtrack = string
-                guard let _ = s.parse(&string) else {
+                guard let _ = s.parse(&string)
+                else {
                     string = backtrack
                     break
                 }
             }
 
-            guard minCount <= matches.count else {
+            guard minCount <= matches.count
+            else {
                 string = original
                 return nil
             }
@@ -41,76 +70,32 @@ public extension Parsers {
 
     // MARK: zeroOrMore
 
-    static func zeroOrMore<A>(_ p: Parser<A>) -> Parser<[A]> {
-        Parser<[A]> { string in
-            var matches: [A] = []
-            while let match = p.parse(&string) {
-                matches.append(match)
-            }
-            return matches
-        }
-    }
+    func zeroOrMore()
+        -> Parser<[OUTPUT]> { takeMany(minCount: 0, maxCount: Int.max) }
 
-    static func zeroOrMore<A, S>(_ p: Parser<A>,
-                                 separatedBy s: Parser<S>) -> Parser<[A]>
-    {
-        Parser<[A]> { string in
-            var backtrack = string
-            var matches: [A] = []
-            while let match = p.parse(&string) {
-                backtrack = string
-                matches.append(match)
-                guard let _ = s.parse(&string) else {
-                    return matches
-                }
-            }
-            string = backtrack
-            return matches
-        }
-    }
+    func zeroOrMore<S>(separatedBy s: Parser<S>)
+        -> Parser<[OUTPUT]>
+    { takeMany(minCount: 0, maxCount: Int.max, separatedBy: s) }
 
     // MARK: oneOrMore
 
-    static func oneOrMore<A>(_ p: Parser<A>) -> Parser<[A]> {
-        Parser<[A]> { string in
-            let original = string
-            guard let result = zeroOrMore(p).parse(&string),
-                  !result.isEmpty
-            else {
-                string = original
-                return nil
-            }
-            return result
-        }
-    }
+    func oneOrMore()
+        -> Parser<[OUTPUT]>
+    { takeMany(minCount: 1, maxCount: Int.max) }
 
-    static func oneOrMore<A, S>(_ p: Parser<A>,
-                                separatedBy s: Parser<S>) -> Parser<[A]>
-    {
-        Parser<[A]> { string in
-            let original = string
-            guard let result = zeroOrMore(p, separatedBy: s).parse(&string),
-                  !result.isEmpty
-            else {
-                string = original
-                return nil
-            }
-            return result
-        }
-    }
+    func oneOrMore<S>(separatedBy s: Parser<S>)
+        -> Parser<[OUTPUT]>
+    { takeMany(minCount: 1, maxCount: Int.max, separatedBy: s) }
 
-    // MARK: oneOf
+    // MARK: takeCount
 
-    static func oneOf<A>(_ ps: [Parser<A>]) -> Parser<A> {
-        Parser<A> { string in
-            for p in ps {
-                if let match = p.parse(&string) {
-                    return match
-                }
-            }
-            return nil
-        }
-    }
+    func takeCount(_ count: Int)
+        -> Parser<[OUTPUT]>
+    { takeMany(minCount: count, maxCount: count) }
+
+    func takeCount<S>(_ count: Int, separatedBy s: Parser<S>)
+        -> Parser<[OUTPUT]>
+    { takeMany(minCount: count, maxCount: count, separatedBy: s) }
 }
 
 // FUTURE:

@@ -8,9 +8,8 @@
 import Foundation
 
 public extension Parser {
-    // map: ((A) -> B) -> (F<A>) -> F<B>
     // map: ((A) -> B) -> (Parser<A>) -> Parser<B>
-    func map<B>(_ f: @escaping (A) -> B) -> Parser<B> {
+    func map<B>(_ f: @escaping (OUTPUT) -> B) -> Parser<B> {
         Parser<B> { string -> B? in
             let matchA = parse(&string)
             let matchB = matchA.map(f)
@@ -18,7 +17,8 @@ public extension Parser {
         }
     }
 
-    func compactMap<B>(_ f: @escaping (A) -> B?) -> Parser<B> {
+    // compactMap: ((A) -> B?) -> (Parser<A>) -> Parser<B>)
+    func compactMap<B>(_ f: @escaping (OUTPUT) -> B?) -> Parser<B> {
         Parser<B> { string -> B? in
             let matchA = parse(&string)
             let matchB = matchA.flatMap(f)
@@ -26,8 +26,8 @@ public extension Parser {
         }
     }
 
-    // flatMap: ((A) -> M<B>) -> (M<A>) -> M<B>
-    func flatMap<B>(_ f: @escaping (A) -> Parser<B>) -> Parser<B> {
+    // flatMap: ((A) -> Parser<B>) -> (Parser<A>) -> Parser<B>
+    func flatMap<B>(_ f: @escaping (OUTPUT) -> Parser<B>) -> Parser<B> {
         Parser<B> { string in
             let original = string
             let matchA = parse(&string)
@@ -39,4 +39,15 @@ public extension Parser {
             return matchB
         }
     }
+}
+
+public extension Parser {
+    // filter: ((A) -> Bool) -> (Parser<A>) -> Parser<B>
+    func filter(_ f: @escaping (OUTPUT) -> Bool) -> Self {
+        compactMap { a -> OUTPUT? in
+            f(a) ? a : nil
+        }
+    }
+
+    // either:      ((A) -> Either<B, C>) -> (Parser<A>) -> Parser<Either<B, C>>
 }

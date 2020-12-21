@@ -9,7 +9,7 @@ import ParserCombinator
 import XCTest
 
 final class ParserTests: XCTestCase {
-    typealias P = Parsers
+    typealias P = Parser
 
     func testInteger() {
         XCTAssertEqual(P.digit.run("123").match, "1")
@@ -27,7 +27,7 @@ final class ParserTests: XCTestCase {
     func testZip() {
         let test = "123"
 
-        let result = P.zip(
+        let result = zip(
             P.character("1"),
             P.character("2"),
             P.character("3")

@@ -7,26 +7,29 @@
 
 import Foundation
 
-// namespace for common parsers
-// suggesting: typealias P = Parsers in callers
-public enum Parsers {}
+// calling suggestion: alias namespace in your code for convenience
+// typealias P = Parser in callers
 
-public struct Parser<A> {
-    public let parse: (inout Substring) -> A?
+// Parser<OUTPUT>
+// The (generic) definition of our parser
+public struct Parser<OUTPUT> {
+    // Takes a substring input and returns an OUTPUT if successful
+    // removes parsed chararacters from input on success
+    // thereby leaving remaining input
+    public let parse: (_ input: inout Substring) -> OUTPUT?
 }
 
 public extension Parser {
-    func run(_ string: String) -> (match: A?, rest: Substring) {
+    // convenience method to run the parser on a string input (without modifiying it)
+    func run(_ string: String) -> (match: OUTPUT?, rest: Substring) {
         var s = string[...]
         let result = parse(&s)
         return (result, s)
     }
-}
 
-public extension Parser {
-    var never: Parser { Parser { _ in nil } }
-}
-
-func always<A>(_ a: A) -> Parser<A> {
-    Parser<A> { _ in a }
+    // convenience method to run the parser on a string input (without modifiying it)
+    // returning just the result
+    func match(_ string: String) -> OUTPUT? {
+        run(string).match
+    }
 }
