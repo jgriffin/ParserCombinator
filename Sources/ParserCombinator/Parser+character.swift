@@ -77,6 +77,8 @@ public extension Parser where OUTPUT == Substring {
     static var alphanums: Self { prefix(charactersIn: .alphanumerics).atLeastOne() }
     static var spaces: Self { prefix { $0 == " " }.atLeastOne() }
     static var whitespaces: Self { prefix(charactersIn: .whitespaces).atLeastOne() }
+    static var newlines: Self { prefix(charactersIn: .newlines).atLeastOne() }
+    static var whitespacesAndNewlines: Self { prefix(charactersIn: .whitespacesAndNewlines).atLeastOne() }
 }
 
 public extension Parser where OUTPUT == Int {

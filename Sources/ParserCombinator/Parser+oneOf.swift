@@ -10,10 +10,10 @@ import Foundation
 // MARK: oneOf
 
 // oneOf - takes the first ps that matches
-public func oneOf<A>(_ ps: Parser<A>...) -> Parser<A> {
-    Parser<A> { string in
+public func oneOf<S: Sequence, A>(_ ps: S) -> Parser<A> where S.Element == Parser<A> {
+    Parser<A> { input in
         for p in ps {
-            if let match = p.parse(&string) {
+            if let match = p.parse(&input) {
                 return match
             }
         }
@@ -21,7 +21,6 @@ public func oneOf<A>(_ ps: Parser<A>...) -> Parser<A> {
     }
 }
 
-// FUTURE:
-// compactMap:  ((A) -> B?) -> (Parser<A>) -> Parser<B>
-// filter:      ((A) -> Bool) -> (Parser<A>) -> Parser<B>
-// either:      ((A) -> Either<B, C>) -> (Parser<A>) -> Parser<Either<B, C>>
+public func oneOf<A>(_ ps: Parser<A>...) -> Parser<A> {
+    oneOf(ps)
+}
